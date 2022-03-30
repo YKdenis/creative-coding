@@ -10,13 +10,16 @@ const settings = {
 };
 
 const animate = () => {
+	console.log('test');
 	requestAnimationFrame(animate);
 };
 // animate();
 
+const colors = ['#0A6059', '#11ADA0', '#16E0D0', '#5CE6DA'];
+
 const sketch = ({ context, width, height }) => {
 	const agents = [];
-	const amountOfAgents = 60;
+	const amountOfAgents = 150;
 	for (i = 0; i <= amountOfAgents; i++) {
 		const x = Math.floor(range(0, width));
 		const y = Math.floor(range(0, height));
@@ -25,7 +28,7 @@ const sketch = ({ context, width, height }) => {
 	}
 
 	return ({ context, width, height }) => {
-		context.fillStyle = 'white';
+		context.fillStyle = 'black';
 		context.fillRect(0, 0, width, height);
 
 		for (i = 0; i < agents.length; i++) {
@@ -34,9 +37,12 @@ const sketch = ({ context, width, height }) => {
 			for (j = i + 1; j < agents.length; j++) {
 				const otherAgent = agents[j];
 				const distance = agent.pos.getDistance(otherAgent.pos);
-				context.strokeStyle = 'black';
+				context.strokeStyle =
+					colors[Math.floor(mapRange(distance, 0, 300, 4, 0))];
 
-				context.lineWidth = 1;
+				if (distance > 200) continue;
+
+				context.lineWidth = mapRange(distance, 0, 200, 6, 1);
 
 				context.beginPath();
 				context.moveTo(agent.pos.x, agent.pos.y);
@@ -47,7 +53,7 @@ const sketch = ({ context, width, height }) => {
 
 		agents.map((agent, i) => {
 			agent.update();
-			agent.bounce(width, height);
+			agent.wrap(width, height);
 			agent.draw(context);
 		});
 	};
@@ -71,7 +77,7 @@ class Vector {
 class Agent {
 	constructor(x, y, radius) {
 		this.pos = new Vector(x, y);
-		this.vel = new Vector(range(-0.5, 0.5), range(-0.5, 0.5));
+		this.vel = new Vector(range(-1, 1), range(-1, 1));
 		this.radius = radius;
 	}
 
@@ -81,15 +87,15 @@ class Agent {
 	}
 
 	draw(context) {
-		context.lineWidth = 1;
+		context.lineWidth = 4;
 
 		context.save();
 		context.translate(this.pos.x, this.pos.y);
 
 		context.beginPath();
 		context.arc(0, 0, this.radius, 0, Math.PI * 2);
-		context.strokeStyle = 'black';
-		context.fillStyle = 'black';
+		context.strokeStyle = colors[3];
+		context.stroke();
 		context.restore();
 	}
 
