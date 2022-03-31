@@ -1,8 +1,5 @@
 const canvasSketch = require('canvas-sketch');
-const {
-	random: { range, noise2D },
-	math,
-} = require('canvas-sketch-util');
+const { random, math } = require('canvas-sketch-util');
 
 const settings = {
 	dimensions: [1080, 1080],
@@ -48,7 +45,7 @@ const sketch = () => {
 			const w = cellWidth * 0.8;
 			const h = cellHeight * 0.8;
 
-			const n = noise2D(x - frame * 5, y + frame * 5, 0.005);
+			const n = random.noise2D(x + frame * 5, y - frame * 5, 0.005);
 			const angle = n * Math.PI * 0.2;
 			const scale = ((n + 1) / 2) * 5;
 
@@ -64,10 +61,9 @@ const sketch = () => {
 			context.beginPath();
 			context.moveTo(w * -0.5, 0);
 			context.lineTo(w * 0.5, 0);
-			context.strokeStyle = colors[0];
-			context.strokeStyle =
-				colors[(i + Math.floor(numCells / i)) % colors.length];
-			context.strokeStyle = colors[i % colors.length];
+			// context.strokeStyle = colors[0];
+			// context.strokeStyle = colors[i % colors.length];
+			context.strokeStyle = random.pick(colors);
 			context.stroke();
 
 			context.restore();

@@ -48,7 +48,7 @@ const sketch = () => {
 			const w = cellWidth * 0.8;
 			const h = cellHeight * 0.8;
 
-			const n = noise2D(x - frame * 5, y + frame * 5, 0.005);
+			const n = noise2D(x + frame * 2, y - frame * 2, 0.005);
 			const angle = n * Math.PI * 0.2;
 			const scale = ((n + 1) / 2) * 5;
 

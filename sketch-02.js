@@ -1,11 +1,26 @@
 const canvasSketch = require('canvas-sketch');
 const {
 	math: { degToRad },
-	random: { range },
+	random: { range, noise2D },
 } = require('canvas-sketch-util');
+const tweakpane = require('tweakpane');
 
 const settings = {
 	dimensions: [1080, 1080],
+	animate: true,
+};
+
+const params = {
+	num: 3000,
+	minLineWidth: 20,
+	maxLineWidth: 30,
+	radius: 0.2,
+	scaleX: -1,
+	scaleY: 1,
+	speed: 1,
+	frame: 0,
+	animate: true,
+	frequency: 0.01,
 };
 
 const createGrd = (context, color0, color1) => {
@@ -22,7 +37,7 @@ const colors = ['#264653', '#2a9d8f', '#e9c46a', '#f4a261', '#e76f51'];
 // const randomRange = (min, max) => Math.random() * (max - min) + min;
 
 const sketch = () => {
-	return ({ context, width, height }) => {
+	return ({ context, width, height, frame }) => {
 		context.fillStyle = '#2a9d8f';
 		context.fillRect(0, 0, width, height);
 
@@ -35,11 +50,10 @@ const sketch = () => {
 		const w = 0.01 * width;
 		const h = 0.1 * height;
 
-		const num = 10000;
-		const radOfEachSlice = degToRad(360 / num);
-		const radius = width * 0.4;
+		const radOfEachSlice = degToRad(360 / params.num);
+		const radius = width * params.radius;
 
-		for (i = 0; i < num; i++) {
+		for (i = 0; i < params.num; i++) {
 			let angle = radOfEachSlice * i;
 			// context.fillStyle = colors[Math.floor(range(0, 4.99))];
 			context.fillStyle = createGrd(context, '#f4a261', '#2a9d8f');
@@ -51,27 +65,25 @@ const sketch = () => {
 			context.save();
 			context.translate(x, y);
 			context.rotate(-angle);
-			context.scale(range(0.2, 0.3), range(0.2, 0.5));
+
+			const n = noise2D(x + frame * params.speed, y, params.frequency);
+
+			context.scale(params.scaleX, params.scaleY);
 
 			context.beginPath();
-			context.rect(-w * 0.5, -h * range(0.2, 9), w, h);
-			context.fill();
+			context.rect(-w * 0.5, -h * n, w, h);
+			context.strokeStyle = 'black';
+			context.stroke();
 			context.restore();
 
 			// arc *******
 			context.save();
 			context.translate(cx, cy);
 			context.rotate(-angle);
-			context.lineWidth = range(20, 30);
+			context.lineWidth = range(params.minLineWidth, params.maxLineWidth);
 
 			context.beginPath();
-			context.arc(
-				0,
-				0,
-				radius * range(0.4, 1),
-				radOfEachSlice * range(0, -2),
-				radOfEachSlice * range(1, 2)
-			);
+			context.arc(0, 0, radius, radOfEachSlice, radOfEachSlice);
 			context.strokeStyle = createGrd(context, '#e9c46a', '#f4a261');
 			context.stroke();
 			context.restore();
@@ -79,4 +91,26 @@ const sketch = () => {
 	};
 };
 
+const createPane = () => {
+	const pane = new tweakpane.Pane();
+	let folder;
+
+	folder = pane.addFolder({ title: 'Animation' });
+	folder.addInput(params, 'animate');
+	folder.addInput(params, 'frame', { min: 0, max: 999 });
+	folder.addInput(params, 'speed', { min: 0, max: 20 });
+	folder.addInput(params, 'frequency', { min: -0.01, max: 0.01 });
+
+	folder = pane.addFolder({ title: 'Cirlce' });
+	folder.addInput(params, 'num', { min: 1, max: 20000 });
+	folder.addInput(params, 'radius', { min: 0, max: 1 });
+
+	folder = pane.addFolder({ title: 'Particle' });
+	folder.addInput(params, 'minLineWidth', { min: 1, max: 50 });
+	folder.addInput(params, 'maxLineWidth', { min: 1, max: 50 });
+	folder.addInput(params, 'scaleX', { min: -1, max: 1 });
+	folder.addInput(params, 'scaleY', { min: -1, max: 1 });
+};
+
+createPane();
 canvasSketch(sketch, settings);
