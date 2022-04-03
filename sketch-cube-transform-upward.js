@@ -3,10 +3,21 @@ const {
 	math: { degToRad, mapRange },
 	random: { range },
 } = require('canvas-sketch-util');
+const tweakpane = require('tweakpane');
 
 const settings = {
 	dimensions: [2048, 2048],
 	// encoding: 'image/jpeg',
+};
+
+const params = {
+	num: 128,
+	cubeWidth: 50,
+	primary: '#318ce7',
+	secondary: '#ace5ee',
+	tertiary: '#fff',
+	quaternary: '#000',
+	background: '#e5fffb',
 };
 
 const createInverseGrd = (context, color0, color1) => {
@@ -21,41 +32,37 @@ const createInverseGrd = (context, color0, color1) => {
 	return grd;
 };
 
-const createGrd = (context, color0, color1) => {
-	const grd = context.createLinearGradient(500, 100, 100, 500);
-	grd.addColorStop(0, color0);
-	grd.addColorStop(1, color1);
-	return grd;
-};
-
-const sketch = ({ context, width, height }) => {
-	const cubeWidth = 50;
-	const num = 128;
-	const rootNum = Math.pow(num, 1 / 2);
-	const ix = width / 2 - cubeWidth * 0.5;
-	const iy = height / 2 - rootNum * cubeWidth * -0.4;
-
-	const cubes = [];
-
-	for (i = 0; i < rootNum; i++) {
-		for (j = 0; j < rootNum; j++) {
-			cubes.push(
-				new Cube(
-					ix - cubeWidth * j + cubeWidth * i,
-					iy + cubeWidth * 0.5 * j + cubeWidth * 0.5 * i,
-					cubeWidth,
-					range(300, 1000)
-				)
-			);
-		}
-	}
+const sketch = ({ context, width, height, render }) => {
+	createPane(render);
 
 	return ({ context, width, height }) => {
-		context.fillStyle = '#e7feff';
+		const rootNum = Math.pow(params.num, 1 / 2);
+		const ix = width / 2 - params.cubeWidth * 0.5;
+		const iy = height / 2 - rootNum * params.cubeWidth * -0.4;
+		const cubes = [];
+
+		for (i = 0; i < rootNum; i++) {
+			for (j = 0; j < rootNum; j++) {
+				cubes.push(
+					new Cube(
+						ix - params.cubeWidth * j + params.cubeWidth * i,
+						iy + params.cubeWidth * 0.5 * j + params.cubeWidth * 0.5 * i,
+						params.cubeWidth,
+						range(300, 1000)
+					)
+				);
+			}
+		}
+
+		const gradients = cubes.map((cube) => ({
+			right: createInverseGrd(context, params.primary, params.secondary),
+			left: createInverseGrd(context, params.secondary, params.tertiary),
+		}));
+		context.fillStyle = params.background;
 
 		context.fillRect(0, 0, width, height);
 
-		cubes.map((cube) => cube.draw(context));
+		cubes.map((cube, i) => cube.draw(context, gradients[i]));
 	};
 };
 
@@ -68,22 +75,22 @@ class Face {
 		this.h = h;
 	}
 
-	draw(context) {
+	draw(context, gradient) {
 		context.save();
 		context.translate(this.ix, this.iy);
 		switch (this.type) {
 			case 'right':
-				context.fillStyle = createInverseGrd(context, '#318ce7', '#ace5ee');
+				context.fillStyle = gradient.right;
 				context.transform(1, 0.5, 0, 1, 0, 0);
 				context.fillRect(0, 0, -this.w, -this.h);
 				break;
 			case 'left':
-				context.fillStyle = createInverseGrd(context, '#ace5ee', '#fff');
+				context.fillStyle = gradient.left;
 				context.transform(1, -0.5, 0, 1, this.w, -this.w * 0.5);
 				context.fillRect(0, 0, -this.w, -this.h);
 				break;
 			case 'center':
-				context.fillStyle = createGrd(context, '#000', '#000');
+				context.fillStyle = params.quaternary;
 				context.translate(-this.w, -this.h - this.w * 0.5);
 				context.rotate(degToRad(135));
 				context.scale(1.06, 1.06);
@@ -108,15 +115,39 @@ class Cube {
 		this.h = h;
 	}
 
-	draw(context) {
+	draw(context, gradient) {
 		const faces = ['center', 'left', 'right'];
 
 		faces.map((face) => {
 			const newFace = new Face(face, this.ix, this.iy, this.w, this.h);
 
-			newFace.draw(context);
+			newFace.draw(context, gradient);
 		});
 	}
 }
+
+const createPane = (render) => {
+	const pane = new tweakpane.Pane();
+	let folder;
+
+	folder = pane.addFolder({ title: 'Cubes' });
+	folder.addInput(params, 'num', { min: 1, max: 1000, step: 1 });
+	folder.addInput(params, 'cubeWidth', { min: 1, max: 200, step: 1 });
+
+	folder = pane.addFolder({ title: 'Colors' });
+	folder.addInput(params, 'primary');
+	folder.addInput(params, 'secondary');
+	folder.addInput(params, 'tertiary');
+	folder.addInput(params, 'quaternary');
+	folder.addInput(params, 'background');
+
+	const btn = pane.addButton({
+		title: 'Rerender',
+	});
+
+	btn.on('click', () => {
+		render();
+	});
+};
 
 canvasSketch(sketch, settings);

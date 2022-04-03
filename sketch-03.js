@@ -3,6 +3,7 @@ const {
 	math: { degToRad, mapRange },
 	random: { range },
 } = require('canvas-sketch-util');
+const tweakpane = require('tweakpane');
 
 const settings = {
 	dimensions: [1048, 1048],
@@ -14,10 +15,17 @@ const animate = () => {
 };
 // animate();
 
+const params = {
+	agentsNum: 40,
+	lineWidth: 1,
+	bounce: true,
+	maxDistance: 200,
+	color: '#000',
+};
+
 const sketch = ({ context, width, height }) => {
-	const agents = [];
-	const amountOfAgents = 60;
-	for (i = 0; i <= amountOfAgents; i++) {
+	let agents = [];
+	for (i = 0; i <= params.agentsNum; i++) {
 		const x = Math.floor(range(0, width));
 		const y = Math.floor(range(0, height));
 
@@ -34,9 +42,11 @@ const sketch = ({ context, width, height }) => {
 			for (j = i + 1; j < agents.length; j++) {
 				const otherAgent = agents[j];
 				const distance = agent.pos.getDistance(otherAgent.pos);
-				context.strokeStyle = 'black';
+				context.strokeStyle = params.color;
 
-				context.lineWidth = 1;
+				if (distance < params.maxDistance) continue;
+
+				context.lineWidth = params.lineWidth;
 
 				context.beginPath();
 				context.moveTo(agent.pos.x, agent.pos.y);
@@ -47,11 +57,29 @@ const sketch = ({ context, width, height }) => {
 
 		agents.map((agent, i) => {
 			agent.update();
-			agent.bounce(width, height);
+			params.bounce ? agent.bounce(width, height) : agent.wrap(width, height);
 			agent.draw(context);
 		});
 	};
 };
+
+const createPane = () => {
+	const pane = new tweakpane.Pane();
+	let folder;
+
+	folder = pane.addFolder({ title: 'Agents' });
+	folder.addInput(params, 'bounce');
+	folder.addInput(params, 'agentsNum', { min: 1, max: 100, step: 1 });
+	folder.addInput(params, 'lineWidth', { min: 1, max: 20, step: 1 });
+	folder.addInput(params, 'maxDistance', {
+		min: 1,
+		max: settings.dimensions[0],
+		step: 1,
+	});
+	folder.addInput(params, 'color');
+};
+
+createPane();
 
 canvasSketch(sketch, settings);
 
@@ -88,8 +116,8 @@ class Agent {
 
 		context.beginPath();
 		context.arc(0, 0, this.radius, 0, Math.PI * 2);
-		context.strokeStyle = 'black';
-		context.fillStyle = 'black';
+		context.strokeStyle = params.color;
+		context.fillStyle = params.color;
 		context.restore();
 	}
 
