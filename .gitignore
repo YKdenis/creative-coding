@@ -1,7 +1,8 @@
 # Dependency directories
 node_modules/
 
-# Output directories
+# Output and asset directories
 output/
+assets/
 
 .DS_Store

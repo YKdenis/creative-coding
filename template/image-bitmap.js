@@ -9,7 +9,7 @@ let fontFamily = 'serif';
 
 const url = 'https://picsum.photos/id/152/3888/2592';
 // const url =
-// 'https://scontent.fbru4-1.fna.fbcdn.net/v/t1.6435-9/109954984_2742036666078187_1076946796826346229_n.jpg?_nc_cat=107&ccb=1-5&_nc_sid=174925&_nc_ohc=ik4CblnZczgAX9jLVaZ&tn=BKoI_vCTQ2ciE9K5&_nc_ht=scontent.fbru4-1.fna&oh=00_AT_4_-MR1NtzHgTEMunWtPH-loUCMbJLLF85PHcy1YTaFg&oe=626F0F41';
+// 	'https://i.pinimg.com/originals/f7/f4/90/f7f490dc456675004e66af3ab2c5a98e.jpg';
 const loadImage = (url) => {
 	return new Promise((res, rej) => {
 		const image = new Image();
@@ -27,7 +27,7 @@ const sketch = ({ context, width, height, update }) => {
 	});
 
 	return ({ context, width, height }) => {
-		const cell = 10;
+		const cell = 1;
 		const cols = Math.floor(width / cell);
 		const rows = Math.floor(height / cell);
 		const numCells = cols * rows;
